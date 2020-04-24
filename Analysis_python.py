@@ -166,45 +166,156 @@ for i in nan_indices:
 
 
 
+plt.figure(figsize=(32, 32))
+plt.barh(unique_countries, country_confirmed_cases)
+plt.titles('Number of COVID-19 Confirmed Cases in Countries')
+plt.xlabel('Number of COVID-19 Confirmed Cases')
+print(plt.show())
 
-print()
-print()
-print()
-print()
-print()
-print()
-print()
-print()
-print()
-print()
-print()
-print()
-print()
-print()
-print()
-print()
-print()
-print()
-print()
-print()
-print()
-print()
-print()
-print()
-print()
-print()
-print()
-print()
-print()
-print()
-print()
-print()
-print()
-print()
-print()
-print()
-print()
-print()
-print()
+
+
+
+china_confirmed = latest_confirmed[confirmed_cases['Country/Region']=='China'].sum()
+outside_mainland_china_confirmed = np.sum(country_confirmed_cases) - china_confirmed
+plt.figure(figsize=(16, 9))
+plt.barh('Mainland China', china_confirmed)
+plt.barh('outside Mainland China', outside_mainland_china_confirmed)
+plt.title('Number of Confirmed Coronavirus Cases')
+print(plt.show())
+
+print('Outside Mainland China {} cases'.format(outside_mainland_china_confirmed))
+print('Mainland China: {} cases'.format(china_confirmed))
+print('Total: {} cases'.format(china_confirmed + outside_mainland_china_confirmed))
+
+
+
+visual_unique_countries = []
+visual_confirmed_cases = []
+others = np.sum(country_confirmed_cases[10:])
+for i in range(len(country_confirmed_cases[:10])):
+    visual_unique_countries.append(unique_countries[i])
+    visual_confirmed_cases.append(country_confirmed_cases[i])
+
+visual_unique_countries.append('Others')
+visual_confirmed_cases.append(others)
+
+plt.figure(figsize=(32, 18))
+plt.barh(visual_unique_countries, visual_confirmed_cases)
+plt.title('Number of COVID-19 Confirmed cases in Countries/Regions', size=20)
+print(plt.show())
+
+
+
+# showing in pie chart
+
+c = random.choices(list(mcolors.CSS4_COLORS.values()),k = len(unique_countries))
+plt.figure(figsize=(20,20))
+plt.title('COVID-19 Confirmed Cases per Country')
+plt.pie(visual_confirmed_cases, colors=c)
+plt.legend(visual_unique_countries, loc='best')
+print(plt.show())
+
+
+
+
+
+X_train_confirmed, X_test_confirmed, y_train_confirmed, y_test_confirmed = train_test_split(days_since_1_22, world_cases, test_size=0.15, shuffle=False)
+
+
+kernel = ['poly','sigmoid','rbf']
+c = [0.01, 0.1, 1, 10]
+gamma = [0.01, 0.1, 1]
+epsilon = [0.01, 0.1, 1]
+shrinking= [True, False]
+svm_grid = {'kernel': kernel,'C': c,'gamma': gamma,'epsilon':epsilon,'shrinking':shrinking}
+svm = SVR(kernel='poly')
+svm_search = RandomizedSearchCV(svm, svm_grid, scoring='neg_mean_squared_error', cv=3, return_train_score=True, n_jobs=-1, n_iter=40, verbose=1)
+svm_search.fit(X_train_confirmed, y_train_confirmed)
+
+print(svm_search.best_params_)
+
+svm_confirmed = svm_search.best_estimator_
+svm_pred = svm_confirmed.predict(future_forecast)
+print(svm_confirmed)
+print(svm_pred)
+
+
+
+svm_test_pred = svm_confirmed.predict(X_test_confirmed)
+plt.plot(svm_test_pred)
+plt.plot(y_test_confirmed)
+print('MAE:', mean_absolute_error(svm_test_pred, y_test_confirmed))
+print('MSE:',mean_squared_error(svm_test_pred, y_test_confirmed))
+
+
+
+plt.figure(figsize=(20, 12))
+plt.plot(adjusted_dates, world_cases)
+plt.title('Number of Coronavirus Cases Over Time', size=30)
+plt.xlabel('Days Since 1/22/2020', size=30)
+plt.ylabel('Number of Cases', size=30)
+plt.xticks(size=15)
+plt.yticks(size=15)
+print(plt.show())
+
+
+
+
+plt.figure(figsize=(20, 12))
+plt.plot(adjusted_dates, world_cases)
+plt.plot(future_forecast, svm_pred, linestyle='dashed', color='purple')
+plt.title('Number of Coronavirus Cases Over Time', size=30)
+plt.xlabel('Days Since 1/22/2020', size=30)
+plt.ylabel('Number of Cases', size=30)
+plt.legend(['Confirmed Cases', 'SVM predictions'])
+plt.xticks(size=15)
+plt.yticks(size=15)
+print(plt.show())
+
+
+print('SVM future predictions:')
+set(zip(future_forcast_dates[-10:], svm_pred[-10:]))
+
+
+
+linear_model = LinearRegression(normalize = True,fit_intercept = True)
+linear_model.fit(X_train_confirmed, y_train_confirmed)
+test_linear_pred = linear_model.predict(X_test_confirmed)
+linear_pred = linear_model.predict(future_forecast)
+print('MAE:', mean_absolute_error(test_linear_pred, y_test_confirmed))
+print('MSE:',mean_squared_error(test_linear_pred, y_test_confirmed))
+
+print(plt.plot(y_test_confirmed))
+print(plt.plot(test_linear_pred))
+
+
+
+
+plt.figure(figsize=(20, 12))
+plt.plot(adjusted_dates, world_cases)
+plt.plot(future_forecast, linear_pred, linestyle='dashed', color='orange')
+plt.title('Number of Coronavirus Cases Over Time', size=30)
+plt.xlabel('Days Since 1/22/2020', size=30)
+plt.ylabel('Number of Cases', size=30)
+plt.legend(['Confirmed Cases', 'Linear Regression Predictions'])
+plt.xticks(size=15)
+plt.yticks(size=15)
+print(plt.show())
+
+
+print('Linear regression future predictions:')
+print(linear_pred[-10:])
+
+
+
+plt.figure(figsize=(20, 12))
+plt.plot(adjusted_dates, total_deaths, color='red')
+plt.title('Number of Coronavirus Deaths Over Time', size=30)
+plt.xlabel('Time', size=30)
+plt.ylabel('Number of Deaths', size=30)
+plt.xticks(size=15)
+plt.yticks(size=15)
+print(plt.show())
+
 
 
